@@ -12,12 +12,24 @@ export class MenuScene extends Phaser.Scene {
   }
 
   create(): void {
+    // 배경 (가장 뒤에 깔림)
+    this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, "bg").setDisplaySize(GAME_WIDTH, GAME_HEIGHT).setDepth(-10);
+
     this.add
-      .text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 60, "GAME JAM", {
+      .text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 90, "FRUIT SLICE", {
         fontFamily: "monospace",
         fontSize: "56px",
         color: COLORS.text,
         fontStyle: "bold",
+      })
+      .setOrigin(0.5);
+
+    // 규칙 한 줄 안내
+    this.add
+      .text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 40, "드래그로 과일을 베고 폭탄은 피하세요 · 60초", {
+        fontFamily: "monospace",
+        fontSize: "16px",
+        color: "#aaaaaa",
       })
       .setOrigin(0.5);
 
@@ -53,6 +65,11 @@ export class MenuScene extends Phaser.Scene {
   }
 
   private startGame(): void {
+    // 브라우저 autoplay 정책 때문에 첫 유저 입력(여기)에서 사운드를 unlock하며 시작한다.
+    // MenuScene은 세션당 한 번만 지나가므로, 이후 GameScene을 몇 번을 재시작해도 BGM은 끊기지 않고 계속 이어진다.
+    if (!this.sound.get("bgm")) {
+      this.sound.play("bgm", { loop: true, volume: 0.5 });
+    }
     this.scene.start("GameScene");
   }
 }

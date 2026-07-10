@@ -3,7 +3,7 @@ import { GAME_WIDTH, GAME_HEIGHT, COLORS } from "../config";
 import { ObjectPool } from "../core/ObjectPool";
 import { SaveManager } from "../core/SaveManager";
 import { BLOCK_COLORS, FRAGS_PER_BLOCK } from "./PreloadScene";
-import { submitScore, fetchTopScores, type LeaderboardEntry } from "../../lib/leaderboard";
+// 랭킹(Supabase) 연동은 나중에 필요할 때 다시 켠다. lib/leaderboard.ts, lib/supabase.ts는 그대로 남겨둠.
 
 // === 게임 튜닝 상수 ===
 const GAME_DURATION = 30; // 총 플레이 시간(초)
@@ -37,8 +37,6 @@ const BOMB_PENALTY = 20; // 폭탄 감점(0 밑으론 안 내려감)
 const COMBO_BONUS = 10; // 한 번의 연속 슬라이스 동안 2번째 블럭부터 추가로 붙는 보너스
 const BLOCK_DEPTH = 1; // 블럭 렌더 깊이
 const BOMB_DEPTH = 2; // 폭탄 렌더 깊이 (블럭보다 항상 위에 그려지도록)
-const SFX_BLOCK_VOLUME = 0.9; // 블록 슬라이스 효과음 볼륨 (0~1). 작게 느껴지면 이 값을 올리면 됨
-const SFX_BLOCK_DELAY = 0; // 효과음 재생 딜레이(초). 싱크가 안 맞으면 +값(늦게)/음수는 안 됨 → 파일 자체를 더 잘라야 함
 
 // 날아다니는 블럭/폭탄
 interface Entity {
@@ -296,7 +294,7 @@ export class GameScene extends Phaser.Scene {
     this.addScore(score);
     this.spawnFrags(x, y, color);
     this.popup(x, y, `+${score}`, "#ffffff");
-    this.sound.play("sfx_block", { volume: SFX_BLOCK_VOLUME, delay: SFX_BLOCK_DELAY });
+    this.sound.play("sfx_block", { volume: 0.6 });
 
     // 콤보: 같은 스와이프(포인터 down~up) 안에서 1개 이상 베면 이어서 카운트됨
     this.swipeHits++;
@@ -362,7 +360,7 @@ export class GameScene extends Phaser.Scene {
     this.entities.splice(i, 1);
   }
 
-  private async endGame(): Promise<void> {
+  private endGame(): void {
     if (this.isOver) return;
     this.isOver = true;
     this.spawnTimer?.remove();
@@ -372,90 +370,33 @@ export class GameScene extends Phaser.Scene {
     const prevBest = SaveManager.get<number>("highscore", 0);
     const best = SaveManager.updateHighScore(this.score);
     const isNewBest = this.score > prevBest && this.score > 0;
-    const finalScore = this.score;
 
-    this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.7).setDepth(30);
+    this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0.65).setDepth(30);
     this.add
-      .text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 155, "TIME'S UP", { fontFamily: "monospace", fontSize: "38px", color: "#ffffff", fontStyle: "bold" })
+      .text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 90, "TIME'S UP", { fontFamily: "monospace", fontSize: "44px", color: "#ffffff", fontStyle: "bold" })
       .setOrigin(0.5)
       .setDepth(31);
     this.add
-      .text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 105, `SCORE ${finalScore}`, { fontFamily: "monospace", fontSize: "26px", color: "#4cc9f0" })
+      .text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 20, `SCORE ${this.score}`, { fontFamily: "monospace", fontSize: "30px", color: "#4cc9f0" })
       .setOrigin(0.5)
       .setDepth(31);
     this.add
-      .text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 75, isNewBest ? "★ NEW BEST ★" : `BEST ${best}`, {
+      .text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 20, isNewBest ? "★ NEW BEST ★" : `BEST ${best}`, {
         fontFamily: "monospace",
-        fontSize: "17px",
+        fontSize: "24px",
         color: isNewBest ? "#ffd32a" : "#ffffff",
       })
       .setOrigin(0.5)
       .setDepth(31);
-
-    // 랭킹 영역: 처음엔 "등록 중" 표시, 등록/조회가 끝나면 텍스트를 갈아끼운다.
-    const rankingText = this.add
-      .text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 40, "랭킹 등록 중...", {
-        fontFamily: "monospace",
-        fontSize: "14px",
-        color: "#aaaaaa",
-        align: "center",
-        lineSpacing: 4,
-      })
-      .setOrigin(0.5, 0)
-      .setDepth(31);
-
     const prompt = this.add
-      .text(GAME_WIDTH / 2, GAME_HEIGHT - 34, "탭 / 스페이스로 다시", { fontFamily: "monospace", fontSize: "16px", color: "#ffffff" })
+      .text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 80, "탭 / 스페이스로 다시", { fontFamily: "monospace", fontSize: "18px", color: "#ffffff" })
       .setOrigin(0.5)
       .setDepth(31);
     this.tweens.add({ targets: prompt, alpha: 0.2, duration: 700, yoyo: true, repeat: -1 });
-
-    // 랭킹 등록/조회는 네트워크가 걸려도 재시작을 막지 않도록 별도로 진행한다.
-    this.submitAndShowRanking(finalScore, rankingText);
 
     this.time.delayedCall(700, () => {
       this.input.once("pointerdown", () => this.scene.restart());
       this.input.keyboard?.once("keydown-SPACE", () => this.scene.restart());
     });
-  }
-
-  /** 이름 입력 → 점수 등록 → 상위 랭킹 조회 → 텍스트 갱신. */
-  private async submitAndShowRanking(finalScore: number, rankingText: Phaser.GameObjects.Text): Promise<void> {
-    const NAME_KEY = "pang_playerName";
-    try {
-      if (finalScore > 0 && typeof window !== "undefined") {
-        let lastName = "";
-        try {
-          lastName = window.localStorage.getItem(NAME_KEY) ?? "";
-        } catch {
-          /* localStorage 접근 불가 시 무시 */
-        }
-        const input = window.prompt("이름을 입력하세요 (랭킹 등록)", lastName)?.trim();
-        if (input) {
-          try {
-            window.localStorage.setItem(NAME_KEY, input);
-          } catch {
-            /* 저장 실패해도 등록은 계속 진행 */
-          }
-          await submitScore(input, finalScore);
-        }
-      }
-    } catch (err) {
-      console.error("[leaderboard] 등록 중 오류:", err);
-    }
-
-    const top = await fetchTopScores(10);
-    rankingText.setText(this.formatRanking(top));
-  }
-
-  private formatRanking(entries: LeaderboardEntry[]): string {
-    if (entries.length === 0) return "랭킹 정보를 불러올 수 없습니다";
-    const lines = ["=== TOP 10 ==="];
-    entries.forEach((e, i) => {
-      const rank = String(i + 1).padStart(2, " ");
-      const name = e.name.padEnd(10, " ");
-      lines.push(`${rank}. ${name} ${e.score}`);
-    });
-    return lines.join("\n");
   }
 }
