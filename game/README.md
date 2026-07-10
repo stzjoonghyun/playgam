@@ -65,5 +65,5 @@ game/
 ## 에셋 급할 때
 
 - 도형(rectangle/circle/graphics)만으로 프로토타입 가능
-- 무료 에셋: Kenney.nl (CC0), 효과음: jsfxr
+- 무료 에셋: Kenney.nl (CC0), 효과음: jsfxr 
 ```
