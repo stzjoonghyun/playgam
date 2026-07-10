@@ -21,15 +21,19 @@ export class MenuScene extends Phaser.Scene {
         fontSize: "56px",
         color: COLORS.text,
         fontStyle: "bold",
+        stroke: "#000000",
+        strokeThickness: 6,
       })
       .setOrigin(0.5);
 
     // 규칙 한 줄 안내
     this.add
-      .text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 40, "드래그로 과일을 베고 폭탄은 피하세요 · 60초", {
+      .text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 40, "드래그로 과일을 베고 폭탄은 피하세요 · 30초", {
         fontFamily: "monospace",
         fontSize: "16px",
-        color: "#aaaaaa",
+        color: "#ffffff",
+        stroke: "#000000",
+        strokeThickness: 3,
       })
       .setOrigin(0.5);
 
@@ -39,6 +43,8 @@ export class MenuScene extends Phaser.Scene {
         fontFamily: "monospace",
         fontSize: "20px",
         color: "#4cc9f0",
+        stroke: "#000000",
+        strokeThickness: 4,
       })
       .setOrigin(0.5);
 
@@ -47,6 +53,8 @@ export class MenuScene extends Phaser.Scene {
         fontFamily: "monospace",
         fontSize: "18px",
         color: COLORS.text,
+        stroke: "#000000",
+        strokeThickness: 4,
       })
       .setOrigin(0.5);
 

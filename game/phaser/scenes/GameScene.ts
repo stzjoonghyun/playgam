@@ -93,6 +93,12 @@ export class GameScene extends Phaser.Scene {
     this.frags = [];
     this.trail = [];
 
+    // 종료 화면(순위 팝업)에서 멈춰뒀던 BGM을 새 라운드 시작 시 다시 이어서 재생
+    const bgm = this.sound.get("bgm");
+    if (bgm && bgm.isPaused) {
+      bgm.resume();
+    }
+
     // 배경 (가장 뒤에 깔림)
     this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, "bg").setDisplaySize(GAME_WIDTH, GAME_HEIGHT).setDepth(-10);
 
@@ -368,6 +374,12 @@ export class GameScene extends Phaser.Scene {
     this.spawnTimer?.remove();
     this.trail.length = 0;
     this.bladeGfx.clear();
+
+    // 순위 팝업(종료 화면)에서는 BGM을 멈춘다. 다음 라운드 시작 시 create()에서 이어서 재생됨.
+    const bgm = this.sound.get("bgm");
+    if (bgm && bgm.isPlaying) {
+      bgm.pause();
+    }
 
     const prevBest = SaveManager.get<number>("highscore", 0);
     const best = SaveManager.updateHighScore(this.score);
