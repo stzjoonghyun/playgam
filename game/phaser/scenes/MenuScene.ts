@@ -16,7 +16,7 @@ export class MenuScene extends Phaser.Scene {
     this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, "bg").setDisplaySize(GAME_WIDTH, GAME_HEIGHT).setDepth(-10);
 
     this.add
-      .text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 90, "FRUIT SLICE", {
+      .text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 90, "썰어라! 애니팡!", {
         fontFamily: "monospace",
         fontSize: "56px",
         color: COLORS.text,
@@ -28,7 +28,7 @@ export class MenuScene extends Phaser.Scene {
 
     // 규칙 한 줄 안내
     this.add
-      .text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 40, "드래그로 과일을 베고 폭탄은 피하세요 · 30초", {
+      .text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 40, "30초동안 드래그로 애니블럭을 썰어보세요.", {
         fontFamily: "monospace",
         fontSize: "16px",
         color: "#ffffff",
