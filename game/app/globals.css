@@ -1,0 +1,27 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+  background: #14141c;
+  /* 캔버스 위 터치 제스처(스크롤/줌) 차단 */
+  touch-action: none;
+}
+
+/* 게임 캔버스를 뷰포트 중앙에 */
+.game-shell {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.game-shell canvas {
+  display: block;
+}
